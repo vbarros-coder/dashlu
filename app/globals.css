@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a1628;
+  --foreground: #e8edf5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Addvalora brand */
+  --color-brand-orange: #F58220;
+  --color-brand-navy:   #0F2A44;
+  --color-brand-blue:   #1E3A5F;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar premium */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #0a1628;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E3A5F;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F58220;
+}
+
+/* Seleções */
+::selection {
+  background: rgba(245, 130, 32, 0.25);
+  color: #fff;
+}
+
+/* Focus ring consistente */
+*:focus-visible {
+  outline: 2px solid #F58220;
+  outline-offset: 2px;
+}
