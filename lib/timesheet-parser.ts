@@ -1,6 +1,6 @@
 "use server";
 
-import * as pdfjs from "pdfjs-dist/legacy/build/pdf.js";
+import * as pdfjs from "pdfjs-dist";
 import {
   TimeSheetItem,
   OperacaoResumo,
