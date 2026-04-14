@@ -4,10 +4,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Configuração para pdfjs-dist funcionar no servidor
-  experimental: {
-    serverComponentsExternalPackages: ["pdfjs-dist"],
-  },
+  // Usar webpack em vez de turbopack (necessário para pdfjs-dist)
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.resolve.alias = {
