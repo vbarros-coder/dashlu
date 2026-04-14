@@ -4,9 +4,18 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Configuração para Vercel - API routes usam Node.js runtime
+  // Configuração para pdfjs-dist funcionar no servidor
   experimental: {
-    serverComponentsExternalPackages: ["pdf-parse"],
+    serverComponentsExternalPackages: ["pdfjs-dist"],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "canvas": false,
+      };
+    }
+    return config;
   },
 };
 

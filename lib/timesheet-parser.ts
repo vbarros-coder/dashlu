@@ -1,12 +1,15 @@
 "use server";
 
-import pdfParse from "pdf-parse";
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.js";
 import {
   TimeSheetItem,
   OperacaoResumo,
   ParsedTimesheetData,
 } from "./timesheet-types";
 import { REGULADORES_MAP, normalizeName } from "./reguladores-map";
+
+// Configurar worker para serverless (sem worker)
+const PDFJS = pdfjs;
 
 // ─── OPERAÇÕES VÁLIDAS ───────────────────────────────────────────────────────
 
@@ -356,21 +359,42 @@ function extrairResumoOperacoes(text: string): OperacaoResumo[] {
 // ─── FUNÇÃO PRINCIPAL ────────────────────────────────────────────────────────
 
 /**
+ * Extrai texto do PDF usando pdfjs-dist (compatível com serverless)
+ */
+async function extractTextFromPDF(buffer: Buffer): Promise<string> {
+  try {
+    // Desabilitar worker para ambiente serverless
+    PDFJS.GlobalWorkerOptions.workerSrc = "";
+    
+    const data = new Uint8Array(buffer);
+    const pdf = await PDFJS.getDocument({ data, useWorkerFetch: false, isEvalSupported: false }).promise;
+    
+    let fullText = "";
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(" ");
+      fullText += pageText + "\n";
+    }
+    
+    return fullText;
+  } catch (error) {
+    console.error("[PDF Extract] Erro ao extrair texto:", error);
+    throw new Error("Falha ao extrair texto do PDF");
+  }
+}
+
+/**
  * Extrai dados do PDF do Baruc Time Sheet
  */
 export async function parseTimesheetPDF(
   buffer: Buffer
 ): Promise<ParsedTimesheetData> {
   try {
-    let text: string;
-    
-    try {
-      const data = await pdfParse(buffer);
-      text = data.text;
-    } catch (pdfError) {
-      console.error("[PDF Parser] Erro ao parsear PDF:", pdfError);
-      throw new Error("Não foi possível extrair texto do PDF. O arquivo pode estar corrompido ou protegido.");
-    }
+    const text = await extractTextFromPDF(buffer);
     
     if (!text || text.trim().length === 0) {
       throw new Error("PDF não contém texto extraível.");
