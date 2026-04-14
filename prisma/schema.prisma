@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários autorizados (para login)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("user") // admin, user
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  sessions Session[]
+  logs     Log[]
+}
+
+// Sessões de login
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+}
+
+// Time Sheets importados
+model TimeSheet {
+  id                String   @id @default(uuid())
+  filename          String
+  fileSize          Int
+  importedAt        DateTime @default(now())
+  importedBy        String?  // email do usuário
+  
+  // Totais
+  totalItems        Int      @default(0)
+  totalValor        Float    @default(0)
+  
+  // Relacionamentos
+  items             TimeSheetItem[]
+  resumos           TimeSheetResumo[]
+  
+  @@index([importedAt])
+  @@index([importedBy])
+}
+
+// Itens individuais do time sheet
+model TimeSheetItem {
+  id                String   @id @default(uuid())
+  timeSheetId       String
+  timeSheet         TimeSheet @relation(fields: [timeSheetId], references: [id], onDelete: Cascade)
+  
+  // Dados do PDF
+  numeroAddvalora   String
+  segurado          String
+  regulador         String
+  tempoMinutos      Int
+  valor             Float
+  dataTimeSheet     DateTime
+  
+  // Classificação
+  operacao          String
+  diretoria         String
+  equipe            String
+  coordenador       String
+  
+  // Metadados
+  createdAt         DateTime @default(now())
+  
+  @@index([timeSheetId])
+  @@index([numeroAddvalora])
+  @@index([regulador])
+  @@index([operacao])
+  @@index([dataTimeSheet])
+}
+
+// Resumo por operação
+model TimeSheetResumo {
+  id                String   @id @default(uuid())
+  timeSheetId       String
+  timeSheet         TimeSheet @relation(fields: [timeSheetId], references: [id], onDelete: Cascade)
+  
+  operacao          String
+  quantidade        Int
+  valorTotal        Float
+  
+  @@index([timeSheetId])
+  @@index([operacao])
+}
+
+// Logs de auditoria (LGPD)
+model Log {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  action      String   // login, logout, import, delete, view
+  resource    String   // timesheet, user, etc
+  resourceId  String?
+  details     String?  // JSON com detalhes
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// Configurações do sistema
+model Config {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
