@@ -280,7 +280,8 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     // Import dinâmico do build legacy - só executa em runtime, não no build
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    const PDFJS = pdfjs.default || pdfjs;
+    // @ts-ignore - o tipo do pdfjs legacy não tem default export tipado
+    const PDFJS = pdfjs;
     
     // Desabilitar worker para ambiente serverless
     PDFJS.GlobalWorkerOptions.workerSrc = "";
